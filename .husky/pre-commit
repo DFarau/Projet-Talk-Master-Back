@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Activez l'environnement Python géré par pyenv
+export PATH="$HOME/.pyenv/shims:$PATH"
+
+# Exécutez Black pour formatter le code
+echo "🔍 Formatting Python files with Black..."
+black .
+
+# Exécutez isort pour organiser les imports
+echo "📋 Sorting imports with isort..."
+isort .
+
+# Exécutez les tests Django si nécessaire
+echo "🧪 Running Django tests..."
+python manage.py test
+
+# Vérifiez si le code a des problèmes avec flake8
+echo "✅ Checking code with flake8..."
+flake8 .
