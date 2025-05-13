@@ -19,3 +19,4 @@ PyJWT==2.9.0
 sqlparse==0.5.3
 tomli==2.2.1
 typing_extensions==4.13.2
+gunicorn==21.2.0
