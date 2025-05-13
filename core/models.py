@@ -1,6 +1,6 @@
 import uuid
 
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, Group, Permission
 from django.db import models
 from django.utils import timezone
 
@@ -49,25 +49,31 @@ class User(AbstractUser):
         ("public", "Public"),
     ]
 
-    # Utilisation d'UUID comme clé primaire (optionnel)
-    # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    # Configuration de l'email comme identifiant unique
     email = models.EmailField(unique=True, verbose_name="Adresse email")
-    username = models.CharField(max_length=150, blank=True, null=True)  # Rendre username optionnel
+    username = models.CharField(max_length=150, blank=True, null=True)
     role = models.CharField(
         max_length=10, choices=ROLE_CHOICES, default="public", verbose_name="Rôle"
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
 
+    # Add related_name attributes to avoid clashes
+    groups = models.ManyToManyField(
+        Group,
+        related_name="custom_user_groups",
+        blank=True,
+        verbose_name="Groupes"
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name="custom_user_permissions",
+        blank=True,
+        verbose_name="Permissions utilisateur"
+    )
+
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []  # Email est déjà requis par défaut
+    REQUIRED_FIELDS = []
 
     objects = UserManager()
-
-    class Meta:
-        verbose_name = "Utilisateur"
-        verbose_name_plural = "Utilisateurs"
 
     def __str__(self):
         return self.email
