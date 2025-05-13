@@ -6,6 +6,8 @@ from django.utils import timezone
 
 
 
+
+
 class Room(models.Model):
     """
     Modèle pour les salles de conférence
