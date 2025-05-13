@@ -1,82 +1,9 @@
 import uuid
 
-from django.contrib.auth.models import AbstractUser, BaseUserManager, Group, Permission
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 
-
-class UserManager(BaseUserManager):
-    """
-    Manager personnalisé pour le modèle User
-    """
-
-    def create_user(self, email, password=None, **extra_fields):
-        """
-        Crée et enregistre un utilisateur avec l'email et le mot de passe donnés.
-        """
-        if not email:
-            raise ValueError("L'adresse email est obligatoire")
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)  # Django gère le hashage du mot de passe
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, email, password=None, **extra_fields):
-        """
-        Crée et enregistre un superutilisateur avec l'email et le mot de passe donnés.
-        """
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("role", "organizer")
-
-        if extra_fields.get("is_staff") is not True:
-            raise ValueError("Un superutilisateur doit avoir is_staff=True.")
-        if extra_fields.get("is_superuser") is not True:
-            raise ValueError("Un superutilisateur doit avoir is_superuser=True.")
-
-        return self.create_user(email, password, **extra_fields)
-
-
-class User(AbstractUser):
-    """
-    Modèle utilisateur personnalisé qui utilise l'email comme identifiant unique
-    """
-
-    ROLE_CHOICES = [
-        ("speaker", "Conférencier"),
-        ("organizer", "Organisateur"),
-        ("public", "Public"),
-    ]
-
-    email = models.EmailField(unique=True, verbose_name="Adresse email")
-    username = models.CharField(max_length=150, blank=True, null=True)
-    role = models.CharField(
-        max_length=10, choices=ROLE_CHOICES, default="public", verbose_name="Rôle"
-    )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
-
-    # Add related_name attributes to avoid clashes
-    groups = models.ManyToManyField(
-        Group,
-        related_name="custom_user_groups",
-        blank=True,
-        verbose_name="Groupes"
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        related_name="custom_user_permissions",
-        blank=True,
-        verbose_name="Permissions utilisateur"
-    )
-
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
-
-    objects = UserManager()
-
-    def __str__(self):
-        return self.email
 
 
 class Room(models.Model):
