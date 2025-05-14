@@ -6,7 +6,8 @@ from .views import (
     TalkListCreateView,
     FavoriteListCreateView,
     CookieTokenObtainPairView,
-    TokenRefreshView
+    TokenRefreshView,
+    RegisterView
 )
 
 urlpatterns = [

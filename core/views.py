@@ -1,7 +1,8 @@
 from rest_framework import generics
+from rest_framework.views import APIView
 from .models import User, Room, TimeSlot, Talk, Favorite
-from .serializers import UserSerializer, RoomSerializer, TimeSlotSerializer, TalkSerializer, FavoriteSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import UserSerializer, RoomSerializer, TimeSlotSerializer, TalkSerializer, FavoriteSerializer, RegisterSerializer, CustomTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
@@ -26,6 +27,28 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             return res
 
         return response
+class LogoutView(APIView):
+    def post(self, request):
+        refresh_token = request.COOKIES.get('refresh_token')
+
+        if refresh_token is None:
+            return Response({'detail': 'Refresh token not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Révoquer le token de rafraîchissement
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            # Supprimer les cookies
+            response = Response({'detail': 'Logout successful'}, status=status.HTTP_200_OK)
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+
+            return response
+
+        except Exception as e:
+            return Response({'detail': 'Invalid or expired token'}, status=status.HTTP_400_BAD_REQUEST)
+
 class TokenRefreshView(APIView):
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
@@ -55,7 +78,7 @@ class TokenRefreshView(APIView):
             return Response({'detail': 'Invalid or expired token'}, status=status.HTTP_401_UNAUTHORIZED)
 
 class RegisterView(generics.CreateAPIView):
-    queryset = CustomUser.objects.all()
+    queryset = User.objects.all()
     serializer_class = RegisterSerializer
 
 # Vue pour lister et créer des utilisateurs
