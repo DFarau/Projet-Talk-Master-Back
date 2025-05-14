@@ -17,6 +17,8 @@ class User(AbstractUser):
     
 
 
+
+
 class Room(models.Model):
     """
     Modèle pour les salles de conférence

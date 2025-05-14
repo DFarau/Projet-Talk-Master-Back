@@ -32,7 +32,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    "core",
     "api",
     "webhooks",
     "django.contrib.admin",
@@ -41,6 +40,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'core',
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
