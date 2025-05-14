@@ -1,7 +1,62 @@
 from rest_framework import generics
 from .models import User, Room, TimeSlot, Talk, Favorite
 from .serializers import UserSerializer, RoomSerializer, TimeSlotSerializer, TalkSerializer, FavoriteSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+import datetime
 
+
+class CookieTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+
+        if response.status_code == 200:
+            access = response.data["access"]
+            refresh = response.data["refresh"]
+            role = response.data["role"]
+
+            res = Response({"message": "Login successful", "role": role}, status=200)
+            res.set_cookie("access_token", access, httponly=True, secure=True, samesite="Lax", max_age=1800)
+            res.set_cookie("refresh_token", refresh, httponly=True, secure=True, samesite="Lax", max_age=7*24*60*60)
+            return res
+
+        return response
+class TokenRefreshView(APIView):
+    def post(self, request):
+        refresh_token = request.COOKIES.get('refresh_token')
+
+        if refresh_token is None:
+            return Response({'detail': 'Refresh token not found'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+
+            response = Response({'access': access_token}, status=status.HTTP_200_OK)
+
+            # Set new access_token in HTTP-only cookie
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=30 * 60  # 30 minutes
+            )
+
+            return response
+
+        except TokenError as e:
+            return Response({'detail': 'Invalid or expired token'}, status=status.HTTP_401_UNAUTHORIZED)
+
+class RegisterView(generics.CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = RegisterSerializer
 
 # Vue pour lister et créer des utilisateurs
 class UserListCreateView(generics.ListCreateAPIView):

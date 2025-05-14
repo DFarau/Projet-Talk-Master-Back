@@ -5,6 +5,8 @@ from .views import (
     TimeSlotListCreateView,
     TalkListCreateView,
     FavoriteListCreateView,
+    CookieTokenObtainPairView,
+    TokenRefreshView
 )
 
 urlpatterns = [
@@ -13,4 +15,7 @@ urlpatterns = [
     path('timeslots/', TimeSlotListCreateView.as_view(), name='timeslot-list-create'),
     path('talks/', TalkListCreateView.as_view(), name='talk-list-create'),
     path('favorites/', FavoriteListCreateView.as_view(), name='favorite-list-create'),
+    path("login/", CookieTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("register/", RegisterView.as_view(), name="register"),
 ]
