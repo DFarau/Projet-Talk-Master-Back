@@ -7,6 +7,9 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from .models import User, Room, Talk
 from .serializers import UserSerializer, RoomSerializer, TalkSerializer
 from .permissions import IsOrganizer, IsSpeaker, IsOrganizerOrReadOnly, IsSpeakerOrReadOnly
+import datetime
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.views import APIView
 
 # VUES CRUD POUR LES SALLES (ROOMS)
 
@@ -17,13 +20,13 @@ class RoomListCreateView(generics.ListCreateAPIView):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name']
     ordering_fields = ['name']
-    permission_classes = [IsOrganizerOrReadOnly]
+    permission_classes = [IsOrganizerOrReadOnly ,IsAuthenticated]
 
 # Vue pour récupérer, mettre à jour ou supprimer une salle spécifique
 class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
-    permission_classes = [IsOrganizerOrReadOnly]
+    permission_classes = [IsOrganizerOrReadOnly,IsAuthenticated]
     
     def get_object(self):
         return get_object_or_404(Room, id=self.kwargs['pk'])
@@ -34,8 +37,8 @@ class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
 class TalkListCreateView(generics.ListCreateAPIView):
     queryset = Talk.objects.all()
     serializer_class = TalkSerializer
-    permission_classes = [IsOrganizerOrReadOnly]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    permission_classes = [IsOrganizerOrReadOnly,IsAuthenticated ]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
     search_fields = ['title', 'description', 'speakerName', 'level']
     ordering_fields = ['start', 'end', 'created_at', 'level', 'status']
     
@@ -83,11 +86,37 @@ class TalkListCreateView(generics.ListCreateAPIView):
         else:
             serializer.save(speaker=speaker, room=room)
 
+class UpdateTalkView(APIView):
+    permission_classes = [IsSpeakerOrReadOnly, IsAuthenticated]
+
+    def put(self, request, pk):
+        # Récupérer le talk à mettre à jour
+        talk = get_object_or_404(Talk, id=pk)
+
+        # Vérifier les données envoyées
+        speaker_id = request.data.get('speaker')
+        room_id = request.data.get('room')
+
+        speaker = None
+        if speaker_id:
+            speaker = get_object_or_404(User, id=speaker_id, role='speaker')
+
+        room = None
+        if room_id:
+            room = get_object_or_404(Room, id=room_id)
+
+        # Sérialiser et valider les données
+        serializer = TalkSerializer(talk, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save(speaker=speaker, room=room)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 # Vue pour récupérer, mettre à jour ou supprimer un talk spécifique
 class TalkDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Talk.objects.all()
     serializer_class = TalkSerializer
-    permission_classes = [IsSpeakerOrReadOnly]
+    permission_classes = [IsSpeakerOrReadOnly, IsAuthenticated]
     
     def get_object(self):
         return get_object_or_404(Talk, id=self.kwargs['pk'])

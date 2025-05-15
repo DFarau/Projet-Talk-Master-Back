@@ -17,6 +17,7 @@ from .talk_views import (
     TalksByOrganizerView,
     TalksByDateView,
     TalksByRoomView,
+    UpdateTalkView,
 )
 
 urlpatterns = [
@@ -36,6 +37,7 @@ urlpatterns = [
     # Vues talks
     path('talks/', TalkListCreateView.as_view(), name='talk-list-create'),
     path('talks/<uuid:pk>/', TalkDetailView.as_view(), name='talk-detail'),
+    path('talks/<uuid:pk>/update/', UpdateTalkView.as_view(), name='update-talk'),
     path('talks/speaker/<uuid:speaker_id>/', TalksBySpeakerView.as_view(), name='talks-by-speaker'),
     path('talks/organizer/<uuid:organizer_id>/', TalksByOrganizerView.as_view(), name='talks-by-organizer'),
     path('talks/date/<str:date>/', TalksByDateView.as_view(), name='talks-by-date'),
