@@ -8,7 +8,6 @@ from .models import User, Room, Talk
 from .serializers import UserSerializer, RoomSerializer, TalkSerializer
 from .permissions import IsOrganizer, IsSpeaker, IsOrganizerOrReadOnly, IsSpeakerOrReadOnly
 import datetime
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
 
 # VUES CRUD POUR LES SALLES (ROOMS)
@@ -38,7 +37,7 @@ class TalkListCreateView(generics.ListCreateAPIView):
     queryset = Talk.objects.all()
     serializer_class = TalkSerializer
     permission_classes = [IsOrganizerOrReadOnly,IsAuthenticated ]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description', 'speakerName', 'level']
     ordering_fields = ['start', 'end', 'created_at', 'level', 'status']
     
