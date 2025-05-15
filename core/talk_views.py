@@ -7,6 +7,8 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from .models import User, Room, Talk
 from .serializers import UserSerializer, RoomSerializer, TalkSerializer
 from .permissions import IsOrganizer, IsSpeaker, IsOrganizerOrReadOnly, IsSpeakerOrReadOnly
+import datetime
+from django_filters.rest_framework import DjangoFilterBackend
 
 # VUES CRUD POUR LES SALLES (ROOMS)
 
@@ -35,12 +37,31 @@ class TalkListCreateView(generics.ListCreateAPIView):
     queryset = Talk.objects.all()
     serializer_class = TalkSerializer
     permission_classes = [IsOrganizerOrReadOnly]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    filterset_fields = ['room', 'speaker', 'organizer', 'status', 'level', 'startdate']
     search_fields = ['title', 'description', 'speakerName', 'level']
-    ordering_fields = ['start', 'end', 'created_at', 'level', 'status']
+    ordering_fields = ['startdate','start', 'end', 'created_at', 'level', 'status']
     
+
     def get_queryset(self):
         queryset = Talk.objects.all()
+        month = self.request.query_params.get('month')
+        year = self.request.query_params.get('year')
+        
+        if month and year:
+            try :
+                month = int(month)
+                year = int(year)
+
+                start_date = datetime(year, month, 1)
+                if month == 12:
+                    end_date = datetime(year + 1, 1, 1)
+                else:
+                    end_date = datetime(year, month + 1, 1)
+                queryset = queryset.filter(startdate__gte=start_date, startdate__lte=end_date)
+            except ValueError:
+                return queryset.none()
+                
         
         # Filtres par paramètres de requête
         room_id = self.request.query_params.get('room')
